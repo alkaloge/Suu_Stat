@@ -1,0 +1,34 @@
+var="jet0_pT"
+var=${1}
+
+python3 Suu_datacards.py --year 2018 --mass 3000 --var ${var}
+python3 Suu_datacards.py --year 2018 --mass 4000 --var ${var}
+python3 Suu_datacards.py --year 2018 --mass 5000 --var ${var}
+python3 Suu_datacards.py --year 2018 --mass 6000 --var ${var}
+python3 Suu_datacards.py --year 2018 --mass 7000 --var ${var}
+python3 Suu_datacards.py --year 2018 --mass 8000 --var ${var}
+python3 Suu_datacards.py --year 2018 --mass 9000 --var ${var}
+
+python3 Suu_datacards.py --year 2017 --mass 3000 --var ${var}
+python3 Suu_datacards.py --year 2017 --mass 4000 --var ${var}
+python3 Suu_datacards.py --year 2017 --mass 5000 --var ${var}
+python3 Suu_datacards.py --year 2017 --mass 6000 --var ${var}
+python3 Suu_datacards.py --year 2017 --mass 7000 --var ${var}
+python3 Suu_datacards.py --year 2017 --mass 8000 --var ${var}
+python3 Suu_datacards.py --year 2017 --mass 9000 --var ${var}
+
+python3 Suu_datacards.py --year 2016 --mass 3000 --var ${var}
+python3 Suu_datacards.py --year 2016 --mass 4000 --var ${var}
+python3 Suu_datacards.py --year 2016 --mass 5000 --var ${var}
+python3 Suu_datacards.py --year 2016 --mass 6000 --var ${var}
+python3 Suu_datacards.py --year 2016 --mass 7000 --var ${var}
+python3 Suu_datacards.py --year 2016 --mass 8000 --var ${var}
+python3 Suu_datacards.py --year 2016 --mass 9000 --var ${var}
+
+#python3 Suu_datacards.py --year preVFP_2016 --mass 3000
+#python3 Suu_datacards.py --year preVFP_2016 --mass 4000
+#python3 Suu_datacards.py --year preVFP_2016 --mass 5000
+#python3 Suu_datacards.py --year preVFP_2016 --mass 6000
+#python3 Suu_datacards.py --year preVFP_2016 --mass 7000
+#python3 Suu_datacards.py --year preVFP_2016 --mass 8000
+#python3 Suu_datacards.py --year preVFP_2016 --mass 9000

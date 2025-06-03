@@ -1,0 +1,17 @@
+
+#first copy datacards from the cofeea area
+#the UL201X will be created - you should have something like 
+#> ls UL2018/
+#>contents  test_2018_JetpTgt300.root  test_2018_JetpTgt500.root
+
+#create the step1 
+
+
+var="jet0_pT"
+. copy_datacards_from_coffea_area.sh
+#execute step1.sh
+
+. step1.sh ${var}
+. makeCards ${var}
+. createDatacards.sh ${var}
+. runLimits.sh ${var}

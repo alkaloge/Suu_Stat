@@ -681,6 +681,337 @@ def PlotTemplate(hists,**kwargs):
 ##############################################
 # plotting final discriminant from datacards #
 ##############################################
+def PlotSuu(hists,fractions,**kwargs):
+
+    isBBA = False
+    for hist in hists:
+        if 'bbA' in hist:
+            isBBA = True
+    
+    year = kwargs.get('year','2018')
+    cat = kwargs.get('cat','0btag')
+    channel = kwargs.get('channel','mmtt')
+    mass = kwargs.get('mass','300')
+    scale_bbA = kwargs.get('scale_bbA',5.)
+    scale_ggA = kwargs.get('scale_ggA',5.)
+    xmin = kwargs.get('xmin',199.9)
+    xmax = kwargs.get('xmax',1150.1)
+    ratiomin = kwargs.get('ratiomin',0.)
+    ratiomax = kwargs.get('ratiomax',3.3)
+    blind = kwargs.get('blind',True)
+    logx = kwargs.get('logx',True)
+    logy = kwargs.get('logy',False)
+    fittype = kwargs.get('fittype','prefit')
+    postfix = kwargs.get('postfix','cards')
+    plotSignal = kwargs.get('plotSignal',False)
+    show_yield = kwargs.get('show_yield',False)
+
+    data_hist = hists['data'].Clone('data_hist')
+
+    nbins = data_hist.GetNbinsX()
+        
+    ggA_hist = hists['ggA'].Clone('ggA_hist')
+    bbA_hist = ggA_hist
+    if isBBA: bbA_hist = hists['bbA'].Clone('bbA_hist')
+
+    ggA_hist.Scale(scale_ggA)
+    if isBBA: bbA_hist.Scale(scale_bbA)
+    
+    fake_hist = hists['reducible_bkg']
+    ZZ_hist = hists['ZZ_bkg']
+    other_hist = hists['other_bkg']
+    tot_hist = hists['tot_bkg']
+    
+    styles.InitData(data_hist,"","")    
+    styles.InitHist(ZZ_hist,"","",ROOT.TColor.GetColor("#4496C8"),1001)
+    styles.InitHist(fake_hist,"","",ROOT.TColor.GetColor("#c6f74a"),1001)
+    styles.InitHist(other_hist,"","",ROOT.TColor.GetColor("#FFCCFF"),1001)
+
+    styles.InitHist(ZZ_hist,"","",ROOT.TColor.GetColor("#ffa90e"),1001) #red
+    styles.InitHist(fake_hist,"","",ROOT.TColor.GetColor("#e76300"),1001)
+    styles.InitHist(other_hist,"","",ROOT.TColor.GetColor("#3f90da"),1001)
+    styles.InitModel(ggA_hist,ROOT.kGreen+1,1)
+    if isBBA: styles.InitModel(bbA_hist,ROOT.kBlue,2)
+    styles.InitTotalHist(tot_hist)
+
+    fake_hist.Add(fake_hist,other_hist)
+    ZZ_hist.Add(ZZ_hist,fake_hist)
+
+    zeroBinErrors(ZZ_hist)
+    zeroBinErrors(fake_hist)
+    zeroBinErrors(other_hist)
+    zeroBinErrors(ggA_hist)
+    zeroBinErrors(bbA_hist)
+
+    # prefit and postfit correlated constraints 
+    # xsecs for ZZ, ttZ, VV and Higgs bkg
+    # and reducible systematics
+    other_sys = 0.25
+    ZZ_sys = 0.05
+    fake_total = fractions['et'] + fractions['mt'] + fractions['tt']
+    fake_sys = (0.2*fractions['et']+0.15*fractions['mt']+0.15*fractions['tt'])/fake_total
+    if fittype=='fit_b' or fittype=='fit_s':
+        fake_sys = (0.15*fractions['et']+0.1*fractions['mt']+0.1*fractions['tt'])/fake_total
+        ZZ_sys = 0.03
+        other_sys = 0.21
+
+    ymin = 0.
+    ymax = 0.
+    xdata = []
+    exdata = []
+    ydata = []
+    eyldata = []
+    eyhdata = []
+    ydata_ratio = []
+    eyldata_ratio = []
+    eyhdata_ratio = []
+    for ib in range(1,nbins+1):
+        x = data_hist.GetBinContent(ib)
+        err = data_hist.GetBinError(ib)
+        xcenter = data_hist.GetBinCenter(ib)
+        binwidth = data_hist.GetBinWidth(ib)
+        binratio = 1.0/binwidth
+        if show_yield:
+            binratio = 1.0
+        err_ZZ = ZZ_hist.GetBinContent(ib)*ZZ_sys
+        err_other = other_hist.GetBinContent(ib)*other_sys
+        err_fake = fake_hist.GetBinContent(ib)*fake_sys
+        err_tot = tot_hist.GetBinError(ib)
+        err_tot = math.sqrt(err_tot*err_tot+err_ZZ*err_ZZ+err_fake*err_fake+err_other*err_other)
+        tot_hist.SetBinError(ib,err_tot)
+        ZZ_hist.SetBinContent(ib,binratio*ZZ_hist.GetBinContent(ib))
+        ZZ_hist.SetBinError(ib,binratio*ZZ_hist.GetBinError(ib))
+        fake_hist.SetBinContent(ib,binratio*fake_hist.GetBinContent(ib))
+        fake_hist.SetBinError(ib,binratio*fake_hist.GetBinError(ib))
+        other_hist.SetBinContent(ib,binratio*other_hist.GetBinContent(ib))
+        other_hist.SetBinError(ib,binratio*other_hist.GetBinError(ib))
+        tot_hist.SetBinContent(ib,binratio*tot_hist.GetBinContent(ib))
+        tot_hist.SetBinError(ib,binratio*tot_hist.GetBinError(ib))
+        ggA_hist.SetBinContent(ib,binratio*ggA_hist.GetBinContent(ib))
+        if isBBA: bbA_hist.SetBinContent(ib,binratio*bbA_hist.GetBinContent(ib))
+        
+        # filling vectors for data graph and data/MC ratio graph
+        xdata.append(xcenter)
+        binwidth = 0.5*(tot_hist.GetBinLowEdge(ib+1)-tot_hist.GetBinLowEdge(ib))
+        exdata.append(binwidth)
+        y_obs = x*binratio
+        if logy and x==0:
+            y_obs = 1e-8
+        ydata.append(y_obs)
+        eyldata.append(binratio*(-0.5+math.sqrt(x+0.25)))
+        eyhdata.append(binratio*(0.5+math.sqrt(x+0.25)))
+        ydata_ratio.append(y_obs/tot_hist.GetBinContent(ib))
+        eyldata_ratio.append(binratio*(-0.5+math.sqrt(x+0.25))/tot_hist.GetBinContent(ib))
+        eyhdata_ratio.append(binratio*(0.5+math.sqrt(x+0.25))/tot_hist.GetBinContent(ib))
+        xsum = (x+err)*binratio
+        if xsum>ymax: ymax = xsum
+
+    data_graph = ROOT.TGraphAsymmErrors(nbins,
+                                        array('d',list(xdata)),
+                                        array('d',list(ydata)),
+                                        array('d',list(exdata)),
+                                        array('d',list(exdata)),
+                                        array('d',list(eyldata)),
+                                        array('d',list(eyhdata)))
+
+    data_graph_ratio = ROOT.TGraphAsymmErrors(nbins,
+                                              array('d',list(xdata)),
+                                              array('d',list(ydata_ratio)),
+                                              array('d',list(exdata)),
+                                              array('d',list(exdata)),
+                                              array('d',list(eyldata_ratio)),
+                                              array('d',list(eyhdata_ratio)))
+
+    data_graph.SetMarkerStyle(20)
+    data_graph.SetMarkerSize(1.3)
+    data_graph.SetMarkerColor(1)
+
+    data_graph_ratio.SetMarkerStyle(20)
+    data_graph_ratio.SetMarkerSize(1.3)
+    data_graph_ratio.SetMarkerColor(1)
+
+    unit_ratio = createUnitHisto(tot_hist,'unit_ratio')
+    unit_ratio.GetYaxis().SetRangeUser(ratiomin,ratiomax)
+    unit_ratio.GetXaxis().SetRangeUser(xmin,xmax)
+
+    ggA_unit = ggA_hist.Clone('ggA_unit')
+
+    if fittype=='fit_s':
+        for ib in range(1,nbins+1):
+            sig_ggA = ggA_hist.GetBinContent(ib)
+            sig_bbA = bbA_hist.GetBinContent(ib)
+            bkg = tot_hist.GetBinContent(ib)
+            total = sig_ggA + sig_bbA + bkg
+            ratio_sig = total/bkg
+            ggA_hist.SetBinContent(ib,total)
+            ggA_unit.SetBinContent(ib,ratio_sig)
+
+    if blind: 
+        ymax = tot_hist.GetMaximum()
+
+    if tot_hist.GetMaximum()>ymax: 
+        ymax = tot_hist.GetMaximum()
+    if ggA_hist.GetMaximum()>ymax:
+        ymax = ggA_hist.GetMaximum()
+    if isBBA:
+        if bbA_hist.GetMaximum()>ymax:
+            ymax = bbA_hist.GetMaximum()
+
+    if logy:
+        if cat=='0btag':
+            ymin = 4e-4
+        else:
+            ymin = 3e-5
+        ymax *= 100.
+    else:
+        ymin = 0.
+        if cat=='0btag':
+            ymax *= 1.05
+        else:
+            ymax *= 1.2
+
+
+    frame = ROOT.TH2D('frame','',2,xmin,xmax,2,ymin,ymax)
+    styles.InitTotalHist(frame)
+    frame.GetYaxis().SetTitle("Events/GeV")
+    if show_yield:
+        frame.GetYaxis().SetTitle("Events / bin")
+    frame.GetYaxis().SetTitleOffset(1.2)
+    frame.GetYaxis().SetTitleSize(0.06)
+    frame.GetYaxis().SetLabelSize(0.055)
+    frame.GetXaxis().SetLabelSize(0)
+
+    frameRatio = ROOT.TH2D('frameRatio','',2,xmin,xmax,2,ratiomin,ratiomax)
+    styles.InitTotalHist(frameRatio)
+    styles.InitRatioHist(frameRatio)
+    #    frameRatio.GetYaxis().SetTitleSize(0.06)
+    frameRatio.GetYaxis().SetTitle("obs/bkg")
+    frameRatio.GetXaxis().SetTitleSize(0.14)
+    frameRatio.GetXaxis().SetTitle("#it{m}_{#it{ll#tau#tau}}^{cons} (GeV)")
+
+    if logx:
+        frame.GetXaxis().SetNdivisions(505)
+        frame.GetXaxis().SetMoreLogLabels()
+        frame.GetXaxis().SetNoExponent()
+        frameRatio.GetXaxis().SetNdivisions(505)
+        frameRatio.GetXaxis().SetMoreLogLabels()
+        frameRatio.GetXaxis().SetNoExponent()
+
+    canv = styles.MakeCanvas('canv','',600,700) 
+
+    # upper pad
+    upper = ROOT.TPad("upper", "pad",0,0.31,1,1)
+    upper.Draw()
+    upper.cd()
+    styles.InitUpperPad(upper)
+    
+    frame.Draw('h')
+    ZZ_hist.Draw('hsame')
+    fake_hist.Draw('hsame')
+    other_hist.Draw('hsame')
+    tot_hist.Draw('e2same')
+    if not blind: 
+        data_graph.Draw('pe1same')
+    if plotSignal:
+        if fittype=='fit_s':
+            ggA_hist.Draw('hsame')
+        else:
+            ggA_hist.Draw('hsame')
+            if isBBA: bbA_hist.Draw('hsame')
+    if not blind:
+        data_graph.Draw('pe1same')
+
+    catTitle = {
+        'btag' : '#it{b-tag}',
+        '0btag': '#it{no b-tag}'
+    }
+    
+    legTitle = catTitle[cat];
+#    if channel in ['et','mt','tt']:
+#        legTitle += '   %s'%(styles.fullchan_map[channel])
+
+    leg = ROOT.TLegend(0.65,0.28,0.90,0.75)
+    if logy:
+        leg = ROOT.TLegend(0.65,0.45,0.90,0.88)
+    styles.SetLegendStyle(leg)
+    leg.SetTextSize(0.055)
+    leg.SetHeader(legTitle)
+    if not blind: leg.AddEntry(data_hist,'data','ple1')
+    leg.AddEntry(ZZ_hist,'ZZ','f')
+    leg.AddEntry(fake_hist,'reducible','f')
+    leg.AddEntry(other_hist,'other','f')
+    if plotSignal:
+        if fittype=='fit_s':
+            leg.AddEntry(ggA_hist,'A('+mass+')','l')
+        else:
+            leg.AddEntry(ggA_hist,'gg#rightarrowA('+mass+')','l')
+            if isBBA: leg.AddEntry(bbA_hist,'b#bar{b}A('+mass+ ')','l')
+    leg.Draw()
+
+    if channel in ['et','mt','tt']:
+        channel_label = {
+            'et': '#tau_{e}#tau_{h}',
+            'mt': '#tau_{#mu}#tau_{h}',
+            'tt': '#tau_{h}#tau_{h}'
+        }
+        latex_channel = ROOT.TLatex()
+        latex_channel.SetNDC()
+        latex_channel.SetTextAngle(0)
+        latex_channel.SetTextColor(1)
+        latex_channel.SetTextSize(0.08)
+        latex_channel.DrawLatex(0.8,0.83,channel_label[channel])
+
+        
+    styles.CMS_label(upper,era=year,extraText='')
+
+    upper.SetLogx(logx)
+    upper.SetLogy(logy)
+    upper.Draw("SAME")
+    upper.RedrawAxis()
+    upper.Modified()
+    upper.Update()
+    canv.cd()
+    canv.Update()
+
+    # lower pad
+    lower = ROOT.TPad("lower", "pad",0,0,1,0.30)
+    lower.Draw()
+    lower.cd()
+    styles.InitLowerPad(lower)
+
+    frameRatio.Draw('h')
+    if fittype=='fit_s' and plotSignal: 
+        ggA_unit.Draw('hsame')
+    line = ROOT.TLine(xmin,1.,xmax,1.)
+    line.SetLineColor(4)
+    line.Draw()
+
+    unit_ratio.Draw('e2same')
+    data_graph_ratio.Draw('pe1same')
+
+    lower.Modified()
+    lower.RedrawAxis()
+    lower.SetLogx(logx)
+    lower.SetGridx(True)
+    canv.cd()
+    canv.Modified()
+    canv.SetSelected(canv)
+    canv.Update()
+
+    if logy:
+        postfix += '_logy'
+    if cat=='':
+        if channel=='':
+            canv.Print('%s/m4l_%s_%s_%s.pdf'%(FiguresFolder,year,mass,postfix))
+        else:
+            canv.Print('%s/m4l_%s_%s_%s_%s.pdf'%(FiguresFolder,year,channel,mass,postfix))
+    else:
+        if channel=='':
+            canv.Print('%s/m4l_%s_%s_%s_%s.pdf'%(FiguresFolder,year,cat,mass,postfix))
+        else:
+            canv.Print('%s/m4l_%s_%s_%s_%s_%s.pdf'%(FiguresFolder,year,cat,channel,mass,postfix))
+
+###############################################
 def Plot(hists,fractions,**kwargs):
 
     isBBA = False

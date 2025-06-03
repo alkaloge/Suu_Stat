@@ -4,28 +4,30 @@ This documentation describes statistical analysis package used in the search for
 
 ## Installation
 
-The statistical analysis of the Suu search results requires [Higgs combination package](http://cms-analysis.github.io/HiggsAnalysis-CombinedLimit), [CombineHarvester toolkit](https://cms-analysis.github.io/CombineHarvester/index.html) and [python analysis code](https://github.com/raspereza/AZh.git). We recommend to download also [datacards of the previous analysis HIG-18-023](https://gitlab.cern.ch/cms-analysis/hig/HIG-18-023) for comparison. The code uses as inputs RooT files containing observed and predicted distributions of the final discriminant - 4-lepton mass reconstructed with the FastMTT algorithm, m(4l). Histograms are provided for data, MC background and signal sample, and data-driven background with jets misidentified as leptons. The inputs have been provided by Justin Gage DeZoort. For convenience the RooT files have been moved from the [original repository](https://github.com/GageDeZoort/azh_coffea/tree/main/src/notebooks/for_alexis) to [this repository](https://github.com/raspereza/AZh/tree/main/combine/root_files/paper).
+The statistical analysis of the Suu search results requires [Higgs combination package](http://cms-analysis.github.io/HiggsAnalysis-CombinedLimit), [CombineHarvester toolkit](https://cms-analysis.github.io/CombineHarvester/index.html) and [python analysis code](https://github.com/alkaloge/Suu_Stat.git). The code uses as inputs RooT files containing observed and predicted distributions of the final discriminant - mSuu_reco mass. Histograms are provided for data, MC background and signal samples. The input RooT files are produced from Coffea 
 
-For the purpose of backtracking of the analysis, it recommended to leave [folder](https://github.com/raspereza/AZh/tree/main/combine/root_files/paper) intact. Once updated RooT with templates become available create the new folder in the [repository of shapes](https://github.com/raspereza/AZh/tree/main/combine/root_files), for example 'coffea_v2' and copy the new files with the shape there. When running script [Setup.py](https://github.com/raspereza/AZh/blob/main/combine/Setup.py) you should indicate the name of this subfolder as an input argument as described below. 
 
-We advise users of this package to consult documentation of the [Combine package](http://cms-analysis.github.io/HiggsAnalysis-CombinedLimit) and [CombineHarvester toolkit](https://cms-analysis.github.io/CombineHarvester/index.html) for detailed information on the statistical methods employed in CMS. 
+It is advisible to also consult documentation of the [Combine package](http://cms-analysis.github.io/HiggsAnalysis-CombinedLimit) and [CombineHarvester toolkit](https://cms-analysis.github.io/CombineHarvester/index.html) for detailed information on the statistical methods employed in CMS. 
 
 It is recommended to install the code under CMSSW_14_1_0_pre4. Installation of the package proceeds as follows:
 ```
 export SCRAM_ARCH=el9_amd64_gcc12
+
 cmsrel CMSSW_14_1_0_pre4
-cd CMSSW_14_1_0_pre4
+cd CMSSW_14_1_0_pre4/src
 cmsenv
 git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
 cd $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit
 git fetch origin
-git checkout v10.0.1
+git checkout v10.2.1
 scramv1 b clean
 scramv1 b -j 4
 cd ../..
+
+git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
 git clone https://github.com/cms-analysis/CombineHarvester.git CombineHarvester
 git checkout v3.0.0-pre1
-git clone https://github.com/raspereza/AZh.git AZh
+git clone https://github.com/alkaloge/Suu_Stat.git Suu_Stat
 scramv1 b -j 4
 ```
 
@@ -33,11 +35,6 @@ RooT files with shapes to be used as inputs for datacards producer, are stored i
 
 After installation is complete, change to the directory [$CMSSW_BASE/src/AZh/combine](https://github.com/raspereza/AZh/tree/main/combine). All scripts will be run in this directory.
 
-Download datacards of the HIG-18-023 analysis from gitlab repo:
-```
-cd $CMSSW_BASE/src/AZh/combine
-git clone https://gitlab.cern.ch/cms-analysis/hig/HIG-18-023/datacards.git HIG-18-023/datacards
-```
 
 Then execute macro [Setup.py](https://github.com/raspereza/AZh/blob/main/combine/Setup.py)
 ```
