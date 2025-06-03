@@ -123,10 +123,6 @@ Running workspaces for all masses interactively is time consuming, especially fo
 ./CreateWorkspaces.py --mass all --batch
 ```
 
-## Creating workspaces for HIG18-023 analysis 
-
-To enable comparison with the published HIG-18-023 analysis, corresponding datacards and workspaces need to be also created. It is done using bash script [CombineCards_HIG18023.bash](https://github.com/raspereza/AZh/blob/main/combine/CombineCards_HIG18023.bash). Workspaces for the HIG-18-023 analysis will be put in folders `HIG-18-023/$mass`.
-
 ## Checking shapes and systematic variations of MC templates
 
 Shapes and systematic variations of MC templates can be plotted with macro [CheckTemplate.py](https://github.com/raspereza/AZh/blob/main/combine/CheckTemplate.py) with the following arguments
@@ -147,24 +143,14 @@ Optional (boolean) flags
 
 Few examples of usage are given below
 ```
-./CheckTemplate.py --analysis azh --year 2018 --cat btag --channel mmmt --template ZZ --sys eleES
+./CheckTemplate.py --analysis Suu --year 2018 --cat btag --channel mmmt --template ZZ --sys eleES
 ```
 With this command the ZZ template along with up/down variations related to uncertainty `eleES` will be plotted from the datacards of our analysis (azh) into file
 *`$CMSSW_BASE/src/AZh/combine/figures/azh_2018_btag_mmmt_ZZ_eleES.png`
 
-```
-./CheckTemplate.py --analysis azh --year 2017 --cat 0btag --channel eeet --template all --sys all --xmin 200 --xmax 400 --logx --verbosity
-```
-With this command plots of all MC templates along with all systematic variations (one output png file per template/systematics) will be save in the folder `$CMSSW_BASE/src/AZh/combine/figures`. The x axis will be set to the range [200,400] with log scale. Detailed printout will be activated. The plots will be produced for year `2017`, `eeet` channel in `0btag` category. 
-
-```
-./CheckTemplate.py --analysis hig18023 --channel eett --template ggA -mass 300 --sys CMS_scale_t_3prong --xmin 200 --xmax 400 
-```
-With this command plots of the ggA template with all systematic variations of uncertainty `CMS_scale_t_3prong` will be produced for datacards of the HIG-18-023 analysis and put in the folder `$CMSSW_BASE/src/AZh/combine/figures`. 
 
 ## Plotting mass distributions from datacards
-The distributions of 4-lepton mass can be plotted from created datacards using macro [PlotCards.py](https://github.com/raspereza/AZh/blob/main/combine/PlotCards.py)
-
+The distributions of the variable used to extract the signal can be plotted from created datacards using macro the PlotCards.py 
 ```
 ./PlotCards.py --year $year --channel $channel --cat $cat --mass $mass
 ```
@@ -187,17 +173,16 @@ The output plot will be saved in the png file `figures/m4l_$year_$cat_$channel_$
 
 Example below shows how to compute [Asymptotic](http://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/tutorial2020/exercise/#a-asymptotic-limits) expected limits on the rate of the process ggA, while rate of the bbA process is set to zero. 
 ```
-combine -M AsymptoticLimits -d datacards/Run2/1000/ws.root \ 
---setParameters r_bbA=0,r_ggA=0 \
---setParameterRanges r_ggA=-30,30 \ 
---redefineSignalPOIs r_ggA \
---freezeParameters r_bbA \
+combine -M AsymptoticLimits -d datacards_JpTGt300/Run2/1000/ws.root \ 
+--setParameters r=0 \
+--setParameterRanges r=-0,30 \ 
+--redefineSignalPOIs r \
 --rAbsAcc 0 --rRelAcc 0.0005 \ 
 --X-rtd MINIMIZER_analytic \
 --cminDefaultMinimizerStrategy 0 \
 --cminDefaultMinimizerTolerance 0.01 \ 
 --noFitAsimov -t -1 \ 
--n ".azh_Run2_ggA" -m 1000 \
+-n ".Suu_Run2_r" -m 1000 \
 ```
 In this example, limits are calculated for the combined Run2 analysis and for mass hypothesis of mA = 1000 GeV, implying that workspace is located in folder `datacards/Run2/1000`. The rate of the bbA process is fixed to zero by settings `--setParameters r_bbA=0` and `--freezeParameters r_bbA`. The flags `--noFitAsimov -t -1` instructs combine utility to compute expected limits without fitting signal+background model to data. The flag `-n ".azh_Run2_bbA"` defined the suffix to be assigned to the output root file with the results of limit computation. In this example output root file will be saved under the name `higgsCombine.azh_Run2_ggA.AsymptoticLimits.mH1000.root`. All other parameters steer the fit and limit finding algorithms. One should swap POIs `r_ggA` and `r_bbA` in the command above to compute limit on the rate of bbA process with the rate of ggA fixed to zero. 
 To compute limits on the ggA rate while profiling in the fit the rate of bbA process, one has to remove flag  `--freezeParameters r_bbA` and allow parameter `r_bbA` to float freely in a reasonably large range : `--setParameterRanges r_ggA=-30,30:r_bbA=-30,30`. It is suggested to vary POIs within the reasonable range to accelerate computation. Range [-30,30] seems to be reasonable for both r_ggA and r_bbA.
@@ -216,27 +201,26 @@ where required inputs are:
 Optional arguments are:
 * `--folder` : folder with datacards (default `datacards`).
 * `--obs` : observed limits are computed.
-* `--releaseOtherPOI` : limits are computed on ggA (bbA) rates with rate of other process allowed to float freely.
 
 
-For a specified mass limits will be computed for both `r_ggA` and `r_bbA`. To set `r_bbA` to zero when running limits on `r_ggA` and vice versa), add flag `--freezeOtherPOI`. If you wish to compute limits for all mass points, specify `--mass all`. 
-Computation of observed limits is activated with flag `--obs`. Results of computation (asymptotic median limit, 2.5, 16, 84 and 97.5% quantiles, and observed limit ) for a given `$mass` and `$year` and process `$proc={ggA,bbA}` are save in folder `$outdir` in the file named `higgsCombine.azh_${year}_${proc}.AsymptoticLimits.mH${mass}.root`.
+If you wish to compute limits for all mass points, specify `--mass all`. Computation of observed limits is activated with flag `--obs`. Results of computation (asymptotic median limit, 2.5, 16, 84 and 97.5% quantiles, and observed limit ) for a given `$mass` and `$year` and process `$proc={ggA,bbA}` are save in folder `$outdir` in the file named `higgsCombine.azh_${year}_${proc}.AsymptoticLimits.mH${mass}.root`.
 
 It is recommended to save expected and observed limits in different output folders, otherwise results of computation will be overwritten. Limits for different years and for Run 2 combination can be safely 
 Running limits for all mass points takes some time. Computation can be accelerated by parallelising the task with flag `--batch`. In this case one job per mass point will be sent to condor batch system.  
 
 
 ## Plotting limits
-Once limits are computed they can be plotted as a function of mA using the RooT macro [PlotLimits.C](https://github.com/raspereza/AZh/blob/main/combine/PlotLimits.C). It is executed with the following arguments:
+Once limits are computed they can be plotted as a function of mA using the RooT macro [PlotLimits.C](https://github.com/alkaloge/Suu_Stat/blob/main/combine/PlotLimits.C). It is executed with the following arguments:
 ```
 void PlotLimits(
 TString Era = "Run2", // year
 TString Sample = "Run2", // available options : 2016, 2017, 2018, Run2, et, mt, tt
-TString Process = "bbA", // process
+TString Process = "signal", // process
 TString folder = "limits", // folder containing output of the macro RunLimits.py (parameter `--outdir`)
-float YMax = 10, // upper boundary of Y axis
-float XMin = 225., // lower boundary of X axis
-float XMax = 2000., // upper boundary of X axis
+float YMin = 0.0001, // upper boundary of Y axis
+float YMax = 0.15, // upper boundary of Y axis
+float XMin = 2900., // lower boundary of X axis
+float XMax = 9100., // upper boundary of X axis
 bool logx = false, // log scale
 bool blindData = true // blinding observed limit
 ) 
