@@ -3,7 +3,8 @@
 
 ## First step  - create root files from coffea (use your usual jyputer setup, nothing fancy here)
 
-The main script is this one 
+All of the script documented for the first part can be copied from `/uscms_data/d3/alkaloge/MetStudies/nAOD/Suu/new/SuuToTU_TToBLNu_SUNY`
+The main script is this one:
 
 `ExtractHists_forDataCards.ipynb`
 
