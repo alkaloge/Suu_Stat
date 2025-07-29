@@ -1,5 +1,6 @@
 # SUU Analysis Instructions
 
+
 ## First step  - create root files from coffea (use your usual jyputer setup, nothing fancy here)
 
 The main script is this one 
@@ -40,13 +41,30 @@ step1_2018_recoSuu_mass0_JetpTgt300.root  step1_2018_recoSuu_mass0_JetpTgt300_re
 
 Now we are ready to make the datacards
 
+## Combine/Statistical treatment part 
 
-## Combine/Statistical treatment part
+You first need to setup combine and CombineHarvester - recommended 
+
+then, from the `$CMSSW/src` do:
+
+```
+git clone https://github.com/alkaloge/Suu_Stat.git
+cd Suu_Stat/combine
+cmsenv
+```
+
+At this point, we assume that you have 
 From the bash command line just execute 
+
+First, let's copy the root files that were created in the previous steps here. You will have to of course edit the file and point to your corresponding area. You can also choose to skip, as there are already the `ULX` directories part of the package you just checked out. 
+
+`. copy_datacards_from_coffea_area.sh`
+
+Next step is to make the datacards. Simply do:
 
 `. makeCards.sh`
 
-This will open each _rebinned_smooth root file and will create a datacards for each mass point. You should see messages like 
+This will open each `_rebinned_smooth` root file and will create a datacard and for each mass point. You should see messages like 
 ```
 Datacards successfully created in: datacards_recoSuu_mass0_JpTGt300/2018/3000
 Datacards successfully created in: datacards_recoSuu_mass0_JpTGt300/2018/4000
@@ -57,6 +75,7 @@ Datacards successfully created in: datacards_recoSuu_mass0_JpTGt300/2018/8000
 Datacards successfully created in: datacards_recoSuu_mass0_JpTGt300/2018/9000
 ...
 ```
+
 Several options can be defined (like the output dir) from the main script `Suu_datacards.py`. Default output dir is `datacards_recoSuu_mass0_JpTGt300`
 
 Next, create the workspaces - the wrapper to be executed is this one 
