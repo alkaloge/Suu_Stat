@@ -9,7 +9,7 @@ maskedChannelsCR=",mask_suu_2016APV_muo_CR=1,mask_suu_2016_muo_CR=1,mask_suu_201
 maskedChannels=${maskedChannelsSR}
 
 
-combine -M FitDiagnostics -d input_${year}_3000.root -n _fit_CRonly_result --saveShapes  --saveWithUncertainties --rMin -20.0 --rMax 20.0 -m 3000 --robustFit 1 --cminDefaultMinimizerTolerance 0.1 --X-rtd MINIMIZER_analytic --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0  --freezeParameters r --setParameters r=0${maskedChannelsSR} --cminPreScan --cminPreFit 1
+combine -M FitDiagnostics -d input_${year}_3000.root -n _fit_CRonly_result --saveShapes  --saveWithUncertainties --rMin -150.0 --rMax 150.0 -m 3000 --robustFit 1 --cminDefaultMinimizerTolerance 0.1 --X-rtd MINIMIZER_analytic --X-rtd FITTER_NEW_CROSSING_ALGO --cminDefaultMinimizerStrategy 0  --freezeParameters r --setParameters r=0${maskedChannelsSR} --cminPreScan --cminPreFit 1
 
 
 combine -M GoodnessOfFit -d input_${year}_3000.root --algo saturated -m 3000 -n .goodnessOfFit_data_saturated --freezeParameters r --setParameters r=0${maskedChannelsSR} --cminPreScan --cminPreFit 1
