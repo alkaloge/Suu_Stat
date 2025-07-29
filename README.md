@@ -1,12 +1,15 @@
-First step  - create root files from coffea (use your usual jyputer setup, nothing fancy here)
+# SUU Analysis Instructions
+
+## First step  - create root files from coffea (use your usual jyputer setup, nothing fancy here)
 
 The main script is this one 
 
-ExtractHists_forDataCards.ipynb
+`ExtractHists_forDataCards.ipynb`
 
-The def hnameRecommended handles the systematics names according to the official CAT recommendations
 
-The def createDatacard is the main function that writes the coffea to root TH1 objects. It has been observed, that in some cases, uproot does not handle properly coffea files and that results into empty or missing TH1 histograms for specific systematics for example. This is been taken care of and we now have all TH1 present in the output.
+The `def hnameRecommended` handles the systematics names according to the official CAT recommendations
+
+The `def createDatacard` is the main function that writes the coffea to root TH1 objects. It has been observed, that in some cases, uproot does not handle properly coffea files and that results into empty or missing TH1 histograms for specific systematics for example. This is been taken care of and we now have all TH1 present in the output.
 
 To produce the corresponding year root file, load the first two blocks (common) and then the desired 2018/2017/year 
 
