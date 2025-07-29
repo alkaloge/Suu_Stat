@@ -79,7 +79,7 @@ Channel suu_2016_ele_CR will use autoMCStats with settings: event-threshold=10, 
 
 Next  we are ready to run combine to get GoF, limits, impacts - It is better to run the next steps from lxplus, as lpc condor does not have the local disks mounted/visible from condor machines
 
-##Asimov data, CR, --expectSignal=0 (B-only)
+## Asimov data, CR, --expectSignal=0 (B-only)
 
 ```
 cd Impacts_Asimov_CR_Bonly
