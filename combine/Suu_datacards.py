@@ -7,14 +7,18 @@ import CombineHarvester.CombineTools.ch as ch
 
 # Define categories with regions (ele_SR, ele_CR, muo_SR, muo_CR)
 cats = [
-    (1, "ele"),
-    (2, "muo"),
+    (1, "ele_SR"),
+    (2, "ele_CR"),
+    (3, "muo_SR"),
+    (4, "muo_CR"),
 ]
 cats_ele = [
-    (1, "ele"),
+    (1, "ele_SR"),
+    (2, "ele_CR"),
 ]
 cats_muo = [
-    (2, "muo"),
+    (1, "muo_SR"),
+    (2, "muo_CR"),
 ]
 
 # Systematic uncertainties (tau-related removed)
@@ -28,7 +32,8 @@ expUnc = {
     'l1prefire': 'CMS_l1prefire',
     'eleSmear': 'CMS_res_e',
     'JES': 'CMS_scale_j',
-    'JER': 'CMS_res_j'
+    'JER': 'CMS_res_j',
+    'topPtWeight' : 'top_pt_reweighting'
 }
 
 def DecorrelateUncertainties(cb, year):
@@ -36,7 +41,7 @@ def DecorrelateUncertainties(cb, year):
         cb.cp().RenameSystematic(cb,unc,expUnc[unc]+"_"+year)
 
 parser = argparse.ArgumentParser(description="Datacards producer")
-parser.add_argument("-year", "--year", required=True, choices=["preVFP_2016","2016", "2017", "2018"])
+parser.add_argument("-year", "--year", required=True, choices=["2016APV","2016", "2017", "2018", "Run2"])
 parser.add_argument("-mass", "--mass", required=True, help="Signal mass (e.g., 3000)")
 parser.add_argument("-folder", "--folder", default="datacards_JpTGt", help="Output folder", required = False)
 parser.add_argument("-no_bbb", "--no_bbb", action="store_true", help="Disable bin-by-bin uncertainties")
@@ -59,35 +64,40 @@ if chn == 'muo' : cats=cats_muo
 # Initialize CombineHarvester
 cb = ch.CombineHarvester()
 
+
 # ================== MAIN CONFIGURATION ==================
 # 1. Add observations with dummy channel (real channel is in bin names)
 cb.AddObservations([""], ["suu"], [year], [""], cats)
-#cb.AddObservations([""], ["suu"], [year], ["muo"], cats)
+
 
 # 2. Add processes
 signals = [f"signal_{mass}"]
 btag_label="0btag"
 backgrounds = ["WJets", "TT", "ST", "DY", "VV", "QCD"]
+#backgrounds += ["CR_WJets", "CR_TT", "CR_ST", "CR_DY", "CR_VV", "CR_QCD"]
 top=["TT"]
+stop=["ST"]
 qcd=["QCD"]
+dy=["DY"]
+vv=["VV"]
+wjets=[""]
 mc_bkgd = backgrounds
-#cb.AddProcesses([mass], ["suu"], [year], [cats], signals, cats, True)
-#cb.AddProcesses([""], ["suu"], [year], [cats], backgrounds, cats, False)
 
 #    return self.__AddProcesses__(mass, analysis, era, channel, procs, bin, signal)
-#cb.AddObservations([""], ["azh"], [year], [btag_label], cats)
 cb.AddProcesses([""], ["suu"], [year],  [""], signals, cats, True)
 cb.AddProcesses([""], ["suu"], [year],  [""], backgrounds, cats, False)
 
 mc_processes = signals + backgrounds
 # 3. Add systematics
 # Luminosity
-if year == '2016':
-    cb.cp().process(mc_processes).AddSyst(cb, 'CMS_lumi_2016', 'lnN', ch.SystMap()(1.010))
+if '2016' in year and 'APV' not in year:
+    cb.cp().process(mc_processes).AddSyst(cb, 'CMS_lumi_2016', 'lnN', ch.SystMap()(1.012))
+if '2016APV' in year:
+    cb.cp().process(mc_processes).AddSyst(cb, 'CMS_lumi_2016APV', 'lnN', ch.SystMap()(1.012))
 elif year == '2017':
-    cb.cp().process(mc_processes).AddSyst(cb, 'CMS_lumi_2017', 'lnN', ch.SystMap()(1.020))
+    cb.cp().process(mc_processes).AddSyst(cb, 'CMS_lumi_2017', 'lnN', ch.SystMap()(1.023))
 elif year == '2018':
-    cb.cp().process(mc_processes).AddSyst(cb, 'CMS_lumi_2018', 'lnN', ch.SystMap()(1.015))
+    cb.cp().process(mc_processes).AddSyst(cb, 'CMS_lumi_2018', 'lnN', ch.SystMap()(1.025))
 
 # Lepton systematics
 #cb.cp().process(mc_processes).AddSyst(cb, "CMS_eff_e", "lnN", ch.SystMap()(1.03))
@@ -128,19 +138,41 @@ cb.cp().process(mc_bkgd).AddSyst(cb, "CMS_eff_m_reco", "lnN", syst_map)
 cb.cp().signals().AddSyst(cb, "CMS_eff_trigger_m", "lnN", syst_map)
 cb.cp().process(mc_bkgd).AddSyst(cb, "CMS_eff_trigger_m", "lnN", syst_map)
 
-#Jet/MET systematics
-cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_scale_j_"+year, "shape", ch.SystMap()(1.0))
-cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_res_j_"+year, "shape", ch.SystMap()(1.0))
-
-cb.cp().process(signals + backgrounds).AddSyst(cb, "pdf", "shape", ch.SystMap()(1.0))
+cb.cp().process(signals ).AddSyst(cb, "pdf_signal", "shape", ch.SystMap()(1.0))
+cb.cp().process(backgrounds).AddSyst(cb, "pdf", "shape", ch.SystMap()(1.0))
 cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_l1_ecal_prefiring", "shape", ch.SystMap()(1.0))
 cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_pileup", "shape", ch.SystMap()(1.0))
-cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_btag_hf", "shape", ch.SystMap()(1.0))
+
+cb.cp().process(qcd).AddSyst(cb, "QCDscale_QCD", "shape", ch.SystMap()(1.))
+cb.cp().process(top).AddSyst(cb, "QCDscale_TT", "shape", ch.SystMap()(1.))
+cb.cp().process(stop).AddSyst(cb, "QCDscale_ST", "shape", ch.SystMap()(1.))
+cb.cp().process(dy).AddSyst(cb, "QCDscale_DY", "shape", ch.SystMap()(1.))
+cb.cp().process(wjets).AddSyst(cb, "QCDscale_WJets", "shape", ch.SystMap()(1.))
+cb.cp().process(vv).AddSyst(cb, "QCDscale_VV", "shape", ch.SystMap()(1.))
+cb.cp().process(top).AddSyst(cb, "top_pt_reweighting", "shape", ch.SystMap()(1.0))
+cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_eff_b", "shape", ch.SystMap()(1.0))
+cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_btag_light", "shape", ch.SystMap()(1.0))
+
+if year == 'Run2' : 
+
+    #Jet/MET systematics
+    cb.cp().process(mc_processes).AddSyst(cb, 'CMS_lumi', 'lnN', ch.SystMap()(1.016))
+    #cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_scale_j", "shape", ch.SystMap()(1.0))
+    #cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_res_j", "shape", ch.SystMap()(1.0))
+
+
+if year != 'Run2' : 
+
+    #Jet/MET systematics
+    cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_scale_j_"+year, "shape", ch.SystMap()(1.0))
+    cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_res_j_"+year, "shape", ch.SystMap()(1.0))
+
+    cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_eff_b_"+year, "shape", ch.SystMap()(1.0))
+    cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_btag_light_"+year, "shape", ch.SystMap()(1.0))
+
 #cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_btag_lf", "shape", ch.SystMap()(1.0)) ## NEED TO FIX
 #cb.cp().process(signals + backgrounds).AddSyst(cb, "QCDscale", "shape", ch.SystMap()(1.0))
 #cb.cp().process(top).AddSyst(cb, "top_pt_reweighting_SR", "shape", ch.SystMap()(1.0))
-cb.cp().process(qcd).AddSyst(cb, "QCD_scale", "lnN", ch.SystMap()(1.5))
-#cb.cp().process(top).AddSyst(cb, "top_pt_reweighting", "shape", ch.SystMap()(1.0))
 
 
 '''
@@ -158,18 +190,26 @@ cb.cp().process(qcd).AddSyst(cb, "QCD_scale", "lnN", ch.SystMap()(1.5))
         'jer': 'CMS_res_j',
         'jes': 'CMS_scale_j',
         'puId': 'CMS_eff_j_PUJET_id',
-        'btag_corr': 'CMS_btag_hf',
-        'btag_uncorr': 'CMS_btag_hf',
-        'mistag_corr': 'CMS_btag_lf',
-        'mistag_uncorr': 'CMS_btag_lf'
+
+        'btag_corr': 'CMS_eff_b',
+        'btag_uncorr': 'CMS_eff_b_'+IOV,
+        'mistag_corr': 'CMS_btag_light',
+        'mistag_uncorr': 'CMS_btag_light_'+IOV
 
 '''
 
 
 #cb.cp().process(signals + backgrounds).AddSyst(cb, "CMS_scale_met_unclustered", "shape", ch.SystMap()(1.0))
 
+
+rootext ="_rebinned_smooth.root"
 # 4. Extract shapes using the correct naming scheme
-input_file = "UL"+year+"/step1_"+year+"_"+var+"_JetpTgt"+cut+".root"
+input_file = "UL"+year+"/step1_"+year+"_"+var+"_JetpTgt"+cut+rootext
+
+# Extract shapes for regular data observations
+# For SR data
+cb.cp().bin([""]).process(["data_obs"]).ExtractShapes(input_file, "$BIN/data_obs", "")
+
 # Signals
 cb.cp().signals().ExtractShapes(
     input_file,
@@ -185,7 +225,7 @@ cb.cp().backgrounds().ExtractShapes(
 
 # 5. Add autoMCStats if enabled
 if auto_mc:
-    cb.AddDatacardLineAtEnd("* autoMCStats 0")
+    cb.AddDatacardLineAtEnd("* autoMCStats 10")
 
 # 6. Create output directory and write cards
 output_dir = os.path.join(folder, year, str(mass))

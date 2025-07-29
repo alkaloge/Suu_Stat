@@ -13,7 +13,7 @@ def MakeCommandWorkspace(**kwargs):
     # 2D workspace
     command = 'cd %s ; '%(utils.JobFolder)
     #command += 'combineTool.py -M T2W -o "ws.root" -P HiggsAnalysis.CombinedLimit.PhysicsModel:multiSignalModel --PO \'"map=^.*/bbA$:r_bbA[0,-40,40]"\' --PO \'"map=^.*/ggA$:r_ggA[0,-40,40]"\' -i %s/%s/%s/%s/ -m %s '%(utils.BaseFolder,folder,sample,mass,mass)
-    command += 'combineTool.py -M T2W -o "ws.root" --PO \'"map=^.*/signal$:r_signal[0,-40,40]"\'  -i %s/%s/%s/%s/ -m %s '%(utils.BaseFolder,folder,sample,mass,mass)
+    command += 'combineTool.py -M T2W -o "ws.root" --PO \'"map=^.*/signal$:r_signal[0,-40,40]"\'  -i %s/%s/%s/%s/ -m %s --channel-masks'%(utils.BaseFolder,folder,sample,mass,mass)
     if batch:
         taskname='workspace_%s_%s'%(sample,mass)
         command += '--job-mode condor --sub-opts=\'+JobFlavour = "workday"\' --task-name %s '%(taskname)
@@ -44,6 +44,9 @@ if __name__ == "__main__":
     samples = ['2016','2017','2018','Run2','ele', 'muo']
     samples = ['2018','2017', 'Run2','ele', 'muo']
     samples = ['preVFP_2016','2016', '2018','2017', 'Run2']
+    samples = ['2016', '2016APV', '2017','2018', 'Run2']
+    #samples = ['2016', '2016APV', '2017','2018' ]
+    #samples = ['2018']
 
 
     batch=False
